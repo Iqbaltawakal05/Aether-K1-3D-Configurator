@@ -1,8 +1,8 @@
 # PROGRESS.md
 
-Current Phase: Phase 6 — Configurator Architecture
-Current Task: Typed configuration state & state store setup
-Status: Phase 5 (Product Viewer) Completed
+Current Phase: Phase 7 — Core Configurator
+Current Task: Case variants & keycap variants
+Status: Phase 6 (Configurator Architecture) Completed
 
 ## Phases
 - [x] 0 Setup
@@ -11,7 +11,7 @@ Status: Phase 5 (Product Viewer) Completed
 - [x] 3 React Three Fiber
 - [x] 4 Blender / Asset Pipeline
 - [x] 5 Product Viewer
-- [ ] 6 Configurator Architecture
+- [x] 6 Configurator Architecture
 - [ ] 7 Core Configurator
 - [ ] 8 Advanced Interaction
 - [ ] 9 UI/UX
@@ -30,4 +30,4 @@ Status: Phase 5 (Product Viewer) Completed
 None.
 
 ## Next
-Start Phase 6: Configurator Architecture.
+Start Phase 7: Core Configurator — wire up UI to 3D model.
