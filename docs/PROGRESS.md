@@ -1,12 +1,12 @@
 # PROGRESS.md
 
-Current Phase: Phase 1 — 3D Fundamentals
-Current Task: X/Y/Z and transforms
-Status: Phase 0 Setup Completed
+Current Phase: Phase 2 — Three.js
+Current Task: Raw Three.js playground
+Status: Phase 1 (3D Fundamentals) Completed
 
 ## Phases
 - [x] 0 Setup
-- [ ] 1 3D Fundamentals
+- [x] 1 3D Fundamentals
 - [ ] 2 Three.js
 - [ ] 3 React Three Fiber
 - [ ] 4 Blender / Asset Pipeline
@@ -30,4 +30,4 @@ Status: Phase 0 Setup Completed
 None.
 
 ## Next
-Start Phase 1 task: 3D Fundamentals.
+Start Phase 2: Three.js playground implementation.
