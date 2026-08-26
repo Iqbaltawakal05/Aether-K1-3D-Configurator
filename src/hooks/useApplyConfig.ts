@@ -31,8 +31,8 @@ export function useApplyConfig({ scene }: UseApplyConfigOptions) {
       const mesh = child as THREE.Mesh
       const name = mesh.name
 
-      // Case Top / Bottom
-      if (name === 'Case_Top' || name === 'Case_Bottom') {
+      // Case Top / Bottom / Bezel
+      if (name === 'Case_Top' || name === 'Case_Bottom' || name === 'Case_Top_Bezel') {
         const mat = mesh.material as THREE.MeshPhysicalMaterial
         mat.color.set(casePreset.color)
         mat.metalness  = casePreset.metalness

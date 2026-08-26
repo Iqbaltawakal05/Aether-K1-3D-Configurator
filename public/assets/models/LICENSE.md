@@ -1,22 +1,35 @@
-# Asset License & Source Documentation — Aether K1
+# Asset License & Source — Aether K1 GLB
 
-## Model Details
+## Model
 
-- **Asset Name**: `aether_k1.glb`
-- **Format**: glTF 2.0 Binary (`.glb`)
-- **Generator**: Procedural Generation via Blender 5.2.1 LTS Python Script (`scripts/generate_aether_k1_model.py`)
-- **Author**: Antigravity AI / Aether K1 Configurator Project
-- **License**: Creative Commons Zero v1.0 Universal (CC0 1.0) / MIT
+- **File**: `aether_k1.glb`
+- **Format**: glTF 2.0 Binary
+- **Generator**: Procedural Python script via Blender 5.2.1 LTS headless
+- **Script**: `scripts/generate_aether_k1_model.py`
+- **License**: CC0 1.0 Universal / MIT
 
-## Mesh Hierarchy & Structure
+## Mesh Hierarchy
 
-- `Case_Top`: Upper housing frame
-- `Case_Bottom`: Lower housing weight
-- `Plate`: Switch mounting plate (Brass PBR material)
-- `PCB`: Circuit board layer
-- `Switches`: Stem & housing components
-- `Keycap_R*`: Individual keycaps with primary & accent PBR materials
+| Object | Description |
+|---|---|
+| `Case_Top` | Outer shell / bezel (metallic navy) |
+| `Case_Top_Bezel` | Inner lip — simulates keycap well opening |
+| `Case_Bottom` | Removable back plate |
+| `PCB` | Hotswap circuit board |
+| `Plate` | Brass switch mounting plate |
+| `Keycap_*` | Individual keycaps (64 keys, 75% layout) |
+| `Switch_Housing_*` | MX switch bodies |
+| `Switch_Stem_*` | Switch stems (colored by type) |
+| `Stab_*` | Stabilizer bars and wires |
+| `USB_Port` | USB-C port detail |
 
-## License Terms
+## Layout
 
-This model is 100% procedurally generated within the project repository. It contains no proprietary third-party CAD files or copyrighted geometry and is legally clear for commercial and non-commercial use.
+75% layout, 5 rows × variable columns. Standard MX pitch (19.05mm).
+Total: 64 keys. Wide keys: Space (6.25U), LShift (2.25U), Enter (2.25U), BkSp (2.0U), RShift (1.75U), others.
+
+## Legal
+
+This asset contains no proprietary third-party geometry. All meshes are
+programmatically generated from scratch within this repository. Safe for
+commercial and non-commercial use without restriction.

@@ -1,105 +1,235 @@
+"""
+Aether K1 - 75% Mechanical Keyboard Procedural Generator
+Blender Z-up, export_yup=True, export_apply=False
+Three.js: mesh.position.y = Blender object.location.z
+
+Scale: 1 unit = 10 cm | Real 75% keyboard: 32cm W x 13cm D x ~3.8cm H
+
+Details added in this version:
+  - Case_Top_Body    : outer shell (solid, metallic navy)
+  - Case_Top_Bezel   : inner lip/frame around keycap opening (slightly lighter, simulates the
+                       recessed keycap well / opening in the top case)
+  - Switch_Housing   : MX switch body (white/grey cube) visible between plate and keycap
+  - Keycaps          : top face slightly inset via bmesh (sculpted top surface)
+  - Stabilizer_Bar   : long keys (space, shift, enter, backspace) get a stab bar detail
+  - USB_Port         : small rectangle on top-right edge of case (detail)
+
+Assembly Z (= Three.js Y):
+  Case_Top_Body   loc.z= 0.000  half_z=0.140  → Z -0.140 to +0.140
+  Case_Top_Bezel  loc.z= 0.115  half_z=0.028  → Z +0.087 to +0.143  (inner lip at top of case)
+  Case_Bottom     loc.z=-0.105  half_z=0.030  → Z -0.135 to -0.075
+  PCB             loc.z=-0.040  half_z=0.018  → Z -0.058 to -0.022
+  Plate           loc.z= 0.020  half_z=0.014  → Z +0.006 to +0.034
+  Switch_Housing  loc.z= 0.095  half_z=0.038  → Z +0.057 to +0.133
+  Keycaps         loc.z= 0.195  half_z=0.055  → Z +0.140 to +0.250
+"""
+
 import bpy
-import math
+import bmesh
 
-# Clear existing objects in Blender default scene
 bpy.ops.wm.read_factory_settings(use_empty=True)
+col = bpy.data.collections.new("Aether_K1")
+bpy.context.scene.collection.children.link(col)
 
-# Create main collection
-collection = bpy.data.collections.new("Aether_K1")
-bpy.context.scene.collection.children.link(collection)
+def add_obj(col):
+    obj = bpy.context.active_object
+    for c in list(obj.users_collection):
+        c.objects.unlink(obj)
+    col.objects.link(obj)
+    return obj
 
-# Helper function to create material
-def create_material(name, color, roughness=0.3, metalness=0.0, clearcoat=0.0):
-    mat = bpy.data.materials.new(name=name)
-    mat.use_nodes = True
-    bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs['Base Color'].default_value = color
-        bsdf.inputs['Roughness'].default_value = roughness
-        bsdf.inputs['Metallic'].default_value = metalness
-        if 'Clearcoat' in bsdf.inputs:
-            bsdf.inputs['Clearcoat'].default_value = clearcoat
-    return mat
+def mat(name, base_color, roughness=0.25, metallic=0.0, clearcoat=0.0):
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    b = m.node_tree.nodes.get("Principled BSDF")
+    if b:
+        b.inputs["Base Color"].default_value = (*base_color, 1.0)
+        b.inputs["Roughness"].default_value = roughness
+        b.inputs["Metallic"].default_value = metallic
+        # Clearcoat removed in Blender 4+ (merged into coat)
+        if "Coat Weight" in b.inputs:
+            b.inputs["Coat Weight"].default_value = clearcoat
+    return m
 
-# Create Materials
-mat_case_top = create_material("Mat_Case_Top", (0.05, 0.08, 0.15, 1.0), roughness=0.2, metalness=0.8, clearcoat=0.5)
-mat_case_bottom = create_material("Mat_Case_Bottom", (0.02, 0.03, 0.05, 1.0), roughness=0.3, metalness=0.9)
-mat_plate = create_material("Mat_Plate", (0.8, 0.7, 0.3, 1.0), roughness=0.2, metalness=1.0) # Brass plate
-mat_pcb = create_material("Mat_PCB", (0.01, 0.2, 0.08, 1.0), roughness=0.4, metalness=0.0)
-mat_switch_stem = create_material("Mat_Switch_Stem", (0.8, 0.1, 0.1, 1.0), roughness=0.3)
-mat_key_primary = create_material("Mat_Keycap_Primary", (0.1, 0.12, 0.16, 1.0), roughness=0.25)
-mat_key_accent = create_material("Mat_Keycap_Accent", (0.85, 0.35, 0.1, 1.0), roughness=0.2)
+# ── Materials ────────────────────────────────────────────────────────────────
+M_CASE_BODY  = mat("M_CaseBody",  (0.10, 0.20, 0.42), roughness=0.15, metallic=0.88, clearcoat=0.9)
+M_CASE_BEZEL = mat("M_CaseBezel", (0.14, 0.28, 0.55), roughness=0.12, metallic=0.90, clearcoat=1.0)
+M_CASE_BOT   = mat("M_CaseBot",   (0.06, 0.08, 0.14), roughness=0.30, metallic=0.85)
+M_PLATE      = mat("M_Plate",     (0.72, 0.58, 0.18), roughness=0.20, metallic=1.00)
+M_PCB        = mat("M_PCB",       (0.01, 0.18, 0.06), roughness=0.45, metallic=0.00)
+M_SW_HOUSE   = mat("M_SwHouse",   (0.88, 0.88, 0.88), roughness=0.40, metallic=0.00)
+M_SW_STEM    = mat("M_SwStem",    (0.80, 0.10, 0.10), roughness=0.30, metallic=0.00)
+M_KEY_PRI    = mat("M_KeyPri",    (0.82, 0.83, 0.85), roughness=0.20, metallic=0.00)
+M_KEY_ACC    = mat("M_KeyAcc",    (0.86, 0.36, 0.06), roughness=0.18, metallic=0.00)
+M_STAB       = mat("M_Stab",      (0.50, 0.50, 0.55), roughness=0.35, metallic=0.60)
+M_USB        = mat("M_USB",       (0.20, 0.20, 0.22), roughness=0.40, metallic=0.70)
 
-# 1. Top Case
-bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0.2, 0))
-case_top = bpy.context.active_object
-case_top.name = "Case_Top"
-case_top.scale = (3.8, 0.35, 1.8)
-case_top.data.materials.append(mat_case_top)
-collection.objects.link(case_top)
+KBD_W = 3.20
+KBD_D = 1.30
+PITCH = 0.1905
 
-# 2. Bottom Case / Weight Plate
-bpy.ops.mesh.primitive_cube_add(size=1, location=(0, -0.05, 0))
-case_bottom = bpy.context.active_object
-case_bottom.name = "Case_Bottom"
-case_bottom.scale = (3.85, 0.2, 1.85)
-case_bottom.data.materials.append(mat_case_bottom)
-collection.objects.link(case_bottom)
+# ── CASE_TOP BODY — outer shell ──────────────────────────────────────────────
+bpy.ops.mesh.primitive_cube_add(location=(0, 0, 0.000))
+ob = add_obj(col); ob.name = "Case_Top"
+ob.scale = (KBD_W / 2, KBD_D / 2, 0.140)
+ob.data.materials.append(M_CASE_BODY)
 
-# 3. Plate
-bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0.35, 0))
-plate = bpy.context.active_object
-plate.name = "Plate"
-plate.scale = (3.6, 0.05, 1.6)
-plate.data.materials.append(mat_plate)
-collection.objects.link(plate)
+# ── CASE_TOP BEZEL — inner lip/frame (simulates keycap well opening) ─────────
+# A slightly smaller, slightly taller ring at the top of the case
+# This creates a visual "step" that implies the keycaps sit in a recessed well
+bpy.ops.mesh.primitive_cube_add(location=(0, 0, 0.115))
+ob = add_obj(col); ob.name = "Case_Top_Bezel"
+ob.scale = (KBD_W / 2 - 0.03, KBD_D / 2 - 0.03, 0.028)
+ob.data.materials.append(M_CASE_BEZEL)
 
-# 4. PCB
-bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0.28, 0))
-pcb = bpy.context.active_object
-pcb.name = "PCB"
-pcb.scale = (3.65, 0.03, 1.65)
-pcb.data.materials.append(mat_pcb)
-collection.objects.link(pcb)
+# ── CASE_BOTTOM ───────────────────────────────────────────────────────────────
+bpy.ops.mesh.primitive_cube_add(location=(0, 0, -0.105))
+ob = add_obj(col); ob.name = "Case_Bottom"
+ob.scale = (KBD_W / 2 - 0.015, KBD_D / 2 - 0.015, 0.030)
+ob.data.materials.append(M_CASE_BOT)
 
-# 5. Keycaps Layout (75% / Compact layout mockup)
-rows = 5
-cols = 14
-start_x = -1.5
-start_z = -0.6
-spacing_x = 0.23
-spacing_z = 0.25
+# ── PCB ───────────────────────────────────────────────────────────────────────
+bpy.ops.mesh.primitive_cube_add(location=(0, 0, -0.040))
+ob = add_obj(col); ob.name = "PCB"
+ob.scale = (KBD_W / 2 - 0.06, KBD_D / 2 - 0.06, 0.018)
+ob.data.materials.append(M_PCB)
 
-for r in range(rows):
-    for c in range(cols):
-        # Determine keycap position
-        kx = start_x + (c * spacing_x)
-        kz = start_z + (r * spacing_z)
-        
-        bpy.ops.mesh.primitive_cube_add(size=1, location=(kx, 0.52, kz))
-        keycap = bpy.context.active_object
-        
-        is_accent = (r == 0 and c == 0) or (r == 2 and c == cols - 1) or (r == 4 and c == 7)
-        keycap.name = f"Keycap_R{r}_C{c}"
-        keycap.scale = (0.2, 0.15, 0.22)
-        
-        if is_accent:
-            keycap.data.materials.append(mat_key_accent)
-        else:
-            keycap.data.materials.append(mat_key_primary)
-            
-        collection.objects.link(keycap)
+# ── PLATE ─────────────────────────────────────────────────────────────────────
+bpy.ops.mesh.primitive_cube_add(location=(0, 0, 0.020))
+ob = add_obj(col); ob.name = "Plate"
+ob.scale = (KBD_W / 2 - 0.07, KBD_D / 2 - 0.07, 0.014)
+ob.data.materials.append(M_PLATE)
 
-        # Switch Stem inside keycap
-        bpy.ops.mesh.primitive_cube_add(size=1, location=(kx, 0.4, kz))
-        stem = bpy.context.active_object
-        stem.name = f"Switch_Stem_R{r}_C{c}"
-        stem.scale = (0.06, 0.1, 0.06)
-        stem.data.materials.append(mat_switch_stem)
-        collection.objects.link(stem)
+# ── USB PORT — top-right edge detail ─────────────────────────────────────────
+# Small notch on the back edge (positive Y in Blender = front, so back = negative Y)
+# USB-C port: ~9mm wide, ~3.5mm tall, centered near right side
+bpy.ops.mesh.primitive_cube_add(location=(0.80, -(KBD_D / 2 - 0.005), 0.060))
+ob = add_obj(col); ob.name = "USB_Port"
+ob.scale = (0.045, 0.008, 0.018)
+ob.data.materials.append(M_USB)
 
-# Deselect all
+# ── KEYCAPS + SWITCH HOUSING ─────────────────────────────────────────────────
+KEY_Z    = 0.195
+KEY_H    = 0.055
+KEY_D_H  = (PITCH * 0.92) / 2
+ROW_Z_STEP = [0.000, 0.004, 0.008, 0.012, 0.017]
+
+# MX switch housing: sits just below keycap, visible between plate and keycap
+SW_H_Z   = 0.095   # switch housing center Z
+SW_H_H   = 0.038   # switch housing half-height
+SW_H_W   = 0.070   # switch housing half-width (14mm × 14mm MX footprint / 10cm scale = 0.14/2)
+
+LAYOUT = [
+    # Row 0: Spacebar row
+    [("R0_Ctrl",1.25,False),("R0_Win",1.25,False),("R0_Alt",1.25,False),
+     ("R0_Space",6.25,False),
+     ("R0_AltGr",1.25,False),("R0_Fn",1.00,False),
+     ("R0_Left",1.00,False),("R0_Down",1.00,False),("R0_Right",1.00,False)],
+    # Row 1: Shift row
+    [("R1_LShift",2.25,False),
+     ("R1_Z",1.00,False),("R1_X",1.00,False),("R1_C",1.00,False),("R1_V",1.00,False),
+     ("R1_B",1.00,False),("R1_N",1.00,False),("R1_M",1.00,False),
+     ("R1_Comma",1.00,False),("R1_Dot",1.00,False),("R1_Slash",1.00,False),
+     ("R1_RShift",1.75,False),("R1_Up",1.00,False)],
+    # Row 2: Home row
+    [("R2_Caps",1.75,False),
+     ("R2_A",1.00,False),("R2_S",1.00,False),("R2_D",1.00,False),("R2_F",1.00,False),
+     ("R2_G",1.00,False),("R2_H",1.00,False),("R2_J",1.00,False),("R2_K",1.00,False),
+     ("R2_L",1.00,False),("R2_Semi",1.00,False),("R2_Quote",1.00,False),
+     ("R2_Enter",2.25,True)],
+    # Row 3: QWERTY row
+    [("R3_Tab",1.50,False),
+     ("R3_Q",1.00,False),("R3_W",1.00,False),("R3_E",1.00,False),("R3_R",1.00,False),
+     ("R3_T",1.00,False),("R3_Y",1.00,False),("R3_U",1.00,False),("R3_I",1.00,False),
+     ("R3_O",1.00,False),("R3_P",1.00,False),
+     ("R3_LBrack",1.00,False),("R3_RBrack",1.00,False),("R3_BSlash",1.50,False),
+     ("R3_Del",1.00,True)],
+    # Row 4: Number row
+    [("R4_Esc",1.00,True),
+     ("R4_1",1.00,False),("R4_2",1.00,False),("R4_3",1.00,False),("R4_4",1.00,False),
+     ("R4_5",1.00,False),("R4_6",1.00,False),("R4_7",1.00,False),("R4_8",1.00,False),
+     ("R4_9",1.00,False),("R4_0",1.00,False),
+     ("R4_Minus",1.00,False),("R4_Equal",1.00,False),("R4_BkSp",2.00,False)],
+]
+
+# Wide keys that need stabilizers (>= 2U)
+STAB_MIN_U = 2.0
+
+num_rows = len(LAYOUT)
+START_Y   = (num_rows - 1) * PITCH / 2
+
+for r_idx, row in enumerate(LAYOUT):
+    row_U    = sum(k[1] for k in row)
+    cursor_x = -(row_U * PITCH) / 2
+    kz = KEY_Z + ROW_Z_STEP[r_idx]
+    ky = START_Y - r_idx * PITCH
+
+    for suffix, width_u, is_accent in row:
+        kx = cursor_x + (width_u * PITCH) / 2
+        sx = (width_u * PITCH * 0.92) / 2
+
+        # ── Keycap (bmesh: sculpted top with slightly inset top face) ──────
+        bm = bmesh.new()
+        # Create a box, then scale top face slightly inward for sculpted look
+        bmesh.ops.create_cube(bm, size=2.0)
+        # Top face verts (z=+1 in local space)
+        top_verts = [v for v in bm.verts if v.co.z > 0.5]
+        # Inset top face by ~4% to simulate keycap dish/sculpt
+        for v in top_verts:
+            v.co.x *= 0.90
+            v.co.y *= 0.90
+        mesh_data = bpy.data.meshes.new(f"Keycap_{suffix}")
+        bm.to_mesh(mesh_data); bm.free()
+
+        ob = bpy.data.objects.new(f"Keycap_{suffix}", mesh_data)
+        for c in list(ob.users_collection): c.objects.unlink(ob)
+        col.objects.link(ob)
+        ob.location = (kx, ky, kz)
+        ob.scale    = (sx, KEY_D_H, KEY_H)
+        ob.data.materials.append(M_KEY_ACC if is_accent else M_KEY_PRI)
+
+        # ── Switch Housing (MX body, visible below keycap) ──────────────────
+        # 1U keys get a single housing; wide keys get housing sized to 1U (center)
+        bpy.ops.mesh.primitive_cube_add(location=(kx, ky, SW_H_Z + ROW_Z_STEP[r_idx] * 0.5))
+        sw = add_obj(col)
+        sw.name  = f"Switch_Housing_{suffix}"
+        sw.scale = (SW_H_W, SW_H_W, SW_H_H)
+        sw.data.materials.append(M_SW_HOUSE)
+
+        # ── Switch Stem (colored peg, center of housing top) ─────────────────
+        stem_z = kz - KEY_H - 0.015
+        bpy.ops.mesh.primitive_cube_add(location=(kx, ky, stem_z))
+        stem = add_obj(col)
+        stem.name  = f"Switch_Stem_{suffix}"
+        stem.scale = (0.022, 0.022, 0.030)
+        stem.data.materials.append(M_SW_STEM)
+
+        # ── Stabilizer bar for wide keys ──────────────────────────────────────
+        if width_u >= STAB_MIN_U:
+            stab_offset = (width_u * PITCH / 2) * 0.65
+            stab_z = SW_H_Z - SW_H_H + 0.005 + ROW_Z_STEP[r_idx] * 0.5
+            for sign in (-1, 1):
+                bpy.ops.mesh.primitive_cube_add(
+                    location=(kx + sign * stab_offset, ky, stab_z))
+                stab = add_obj(col)
+                stab.name  = f"Stab_{suffix}_{'L' if sign < 0 else 'R'}"
+                stab.scale = (0.018, 0.018, 0.025)
+                stab.data.materials.append(M_STAB)
+            # Wire connecting stabs
+            bpy.ops.mesh.primitive_cube_add(location=(kx, ky, stab_z - 0.010))
+            wire = add_obj(col)
+            wire.name  = f"Stab_Wire_{suffix}"
+            wire.scale = (stab_offset, 0.005, 0.005)
+            wire.data.materials.append(M_STAB)
+
+        cursor_x += width_u * PITCH
+
 bpy.ops.object.select_all(action='DESELECT')
 
-print("Aether K1 3D model procedural generation complete.")
-
+max_U = max(sum(k[1] for k in row) for row in LAYOUT)
+print("=== Aether K1 generation complete ===")
+print(f"Case body:   Z -0.140 to +0.140 (28mm)")
+print(f"Case bezel:  Z +0.087 to +0.143 (inner lip)")
+print(f"Keycaps:     Z +0.140 to +0.250 (sculpted top)")
+print(f"Grid: {max_U}U x {num_rows} rows")
+print(f"Total objects: {len(bpy.data.objects)}")

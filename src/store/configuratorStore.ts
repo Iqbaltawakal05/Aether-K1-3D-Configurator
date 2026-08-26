@@ -14,7 +14,7 @@ export type KeyboardPart = 'case' | 'keycaps' | 'switches' | 'plate' | 'pcb'
 
 // Material presets mapped to Three.js-compatible colors
 export const CASE_PRESETS: Record<CaseVariant, { color: string; metalness: number; roughness: number; clearcoat: number; label: string }> = {
-  navy:   { color: '#0f172a', metalness: 0.85, roughness: 0.15, clearcoat: 0.8, label: 'Midnight Navy' },
+  navy:   { color: '#1e3a6e', metalness: 0.85, roughness: 0.15, clearcoat: 0.8, label: 'Midnight Navy' },
   slate:  { color: '#334155', metalness: 0.70, roughness: 0.30, clearcoat: 0.5, label: 'Storm Slate' },
   teal:   { color: '#0f4c4c', metalness: 0.80, roughness: 0.20, clearcoat: 0.7, label: 'Arctic Teal' },
   ember:  { color: '#7c2d12', metalness: 0.75, roughness: 0.25, clearcoat: 0.6, label: 'Ember Red' },

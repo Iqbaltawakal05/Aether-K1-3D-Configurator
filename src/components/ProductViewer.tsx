@@ -191,10 +191,11 @@ export function ProductViewer() {
           ) : (
             <Canvas
               shadows
-              camera={{ position: [0, 3, 5], fov: 45 }}
+              camera={{ position: [4, 3.5, 4], fov: 40 }}
               style={{ background: 'var(--color-bg-main)' }}
               dpr={dpr}
               gl={{ antialias: true, powerPreference: 'high-performance' }}
+              onCreated={({ gl }) => { gl.shadowMap.type = 1 /* PCFShadowMap */ }}
             >
               {/* Adaptive Performance Monitoring */}
               <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.5)}>
@@ -222,8 +223,8 @@ export function ProductViewer() {
                   autoRotateSpeed={1.5}
                   minDistance={2}
                   maxDistance={10}
-                  minPolarAngle={Math.PI / 6}
-                  maxPolarAngle={Math.PI / 2 - 0.05}
+                  minPolarAngle={Math.PI / 5}
+                  maxPolarAngle={Math.PI / 2 - 0.08}
                 />
               </PerformanceMonitor>
             </Canvas>
