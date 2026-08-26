@@ -1,4 +1,4 @@
-import { Suspense, Component, ReactNode, useRef } from 'react'
+import { Suspense, Component, ReactNode, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useGLTF, OrbitControls, ContactShadows, Environment, Center, Bounds, Html } from '@react-three/drei'
 import * as THREE from 'three'
@@ -20,7 +20,6 @@ function KeyboardModel() {
   // Apply advanced interaction (exploded view Y-positions & hover/selection emissive highlights)
   useAdvancedInteraction({ scene: sceneRef.current })
 
-  // Attach pointer event handlers for raycasting interaction
   scene.traverse((child) => {
     if ('isMesh' in child && child.isMesh) {
       child.castShadow = true
@@ -133,27 +132,38 @@ class ModelErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 
 export function ProductViewer() {
   const { autoRotate } = useConfigurator()
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#030712', color: '#f9fafb' }}>
+    <div className="configurator-wrapper">
       {/* Header */}
-      <header style={{ padding: '0.75rem 1.5rem', background: '#090d16', borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, flexShrink: 0 }}>
+      <header style={{ padding: '0.75rem 1.5rem', background: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, flexShrink: 0 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '1.125rem', letterSpacing: '-0.01em' }}>Aether K1 — 3D Configurator</h2>
-          <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
             Interactive customization with live 3D preview &amp; exploded layer view
           </p>
         </div>
       </header>
 
-      {/* Main Layout: Canvas + ConfiguratorPanel */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* 3D Canvas */}
-        <div style={{ flex: 1, position: 'relative' }}>
+      {/* Main Responsive Layout */}
+      <div className="configurator-content">
+        {/* Mobile Controls Toggle Button */}
+        <button
+          type="button"
+          className="mobile-toggle-btn"
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          aria-label="Toggle configuration panel"
+        >
+          ⚙️ Customize
+        </button>
+
+        {/* 3D Canvas Container */}
+        <div style={{ flex: 1, position: 'relative', width: '100%', height: '100%' }}>
           <Canvas
             shadows
             camera={{ position: [0, 3, 5], fov: 45 }}
-            style={{ background: '#030712' }}
+            style={{ background: 'var(--color-bg-main)' }}
             dpr={[1, 2]}
           >
             <ambientLight intensity={0.7} />
@@ -186,13 +196,16 @@ export function ProductViewer() {
           </Canvas>
 
           {/* Gesture hint */}
-          <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(8px)', padding: '0.5rem 1.25rem', borderRadius: '9999px', border: '1px solid #1e293b', fontSize: '0.75rem', color: '#94a3b8', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+          <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', padding: '0.5rem 1.25rem', borderRadius: '9999px', border: '1px solid var(--color-border)', fontSize: '0.75rem', color: 'var(--color-text-muted)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
             🖱️ Click parts to select · Drag/Scroll to inspect layers
           </div>
         </div>
 
-        {/* Configurator Sidebar */}
-        <ConfiguratorPanel />
+        {/* Configurator Sidebar / Mobile Drawer Panel */}
+        <ConfiguratorPanel
+          isMobileOpen={isMobileOpen}
+          onCloseMobile={() => setIsMobileOpen(false)}
+        />
       </div>
     </div>
   )
