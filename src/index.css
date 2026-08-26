@@ -1,0 +1,142 @@
+/* Global Base Styles & Design Tokens for Aether K1 Configurator */
+:root {
+  --color-bg-main: #030712;
+  --color-bg-card: #090d16;
+  --color-bg-elevated: #0f172a;
+  --color-border: #1e293b;
+  --color-border-hover: #334155;
+  --color-primary: #38bdf8;
+  --color-primary-hover: #0ea5e9;
+  --color-text-main: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg-main);
+  color: var(--color-text-main);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Accessibility Focus States */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Prefers Reduced Motion Media Query */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-card);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-hover);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Responsive Configurator Layout */
+.configurator-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.configurator-content {
+  display: flex;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Desktop Sidebar */
+.configurator-sidebar {
+  width: 320px;
+  min-width: 320px;
+  background: var(--color-bg-card);
+  border-left: 1px solid var(--color-border);
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  transition: transform 0.3s ease;
+}
+
+/* Mobile Bottom Sheet Drawer Toggle */
+.mobile-toggle-btn {
+  display: none;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 30;
+  padding: 0.75rem 1.25rem;
+  min-height: 44px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+  .mobile-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .configurator-content {
+    flex-direction: column;
+  }
+
+  .configurator-sidebar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 60vh;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.7);
+    transform: translateY(100%);
+  }
+
+  .configurator-sidebar.open {
+    transform: translateY(0);
+  }
+}
+
