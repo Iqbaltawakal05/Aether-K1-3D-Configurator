@@ -1,5 +1,5 @@
-import { FundamentalsExperiment } from './components/FundamentalsExperiment'
+import { ThreePlayground } from './components/ThreePlayground'
 
 export default function App() {
-  return <FundamentalsExperiment />
+  return <ThreePlayground />
 }
