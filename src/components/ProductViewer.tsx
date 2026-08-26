@@ -1,6 +1,6 @@
 import { Suspense, Component, ReactNode, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { useGLTF, OrbitControls, ContactShadows, Environment, Center, Bounds, Html } from '@react-three/drei'
+import { useGLTF, OrbitControls, ContactShadows, Environment, Center, Bounds, Html, PerformanceMonitor } from '@react-three/drei'
 import * as THREE from 'three'
 import { useApplyConfig } from '../hooks/useApplyConfig'
 import { useAdvancedInteraction } from '../hooks/useAdvancedInteraction'
@@ -17,7 +17,7 @@ function KeyboardModel() {
   // Apply material configuration state
   useApplyConfig({ scene: sceneRef.current })
 
-  // Apply advanced interaction (exploded view Y-positions & hover/selection emissive highlights)
+  // Apply advanced interaction
   useAdvancedInteraction({ scene: sceneRef.current })
 
   scene.traverse((child) => {
@@ -133,6 +133,7 @@ class ModelErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 export function ProductViewer() {
   const { autoRotate } = useConfigurator()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [dpr, setDpr] = useState<number>(1.5)
 
   return (
     <div className="configurator-wrapper">
@@ -164,35 +165,39 @@ export function ProductViewer() {
             shadows
             camera={{ position: [0, 3, 5], fov: 45 }}
             style={{ background: 'var(--color-bg-main)' }}
-            dpr={[1, 2]}
+            dpr={dpr}
+            gl={{ antialias: true, powerPreference: 'high-performance' }}
           >
-            <ambientLight intensity={0.7} />
-            <directionalLight position={[5, 8, 4]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0001} />
-            <directionalLight position={[-5, 3, -4]} intensity={0.5} color="#38bdf8" />
+            {/* Adaptive Performance Monitoring for smooth FPS */}
+            <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.5)}>
+              <ambientLight intensity={0.7} />
+              <directionalLight position={[5, 8, 4]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0001} />
+              <directionalLight position={[-5, 3, -4]} intensity={0.5} color="#38bdf8" />
 
-            <Bounds fit clip observe margin={1.2}>
-              <Center top>
-                <ModelErrorBoundary>
-                  <Suspense fallback={<Loader />}>
-                    <KeyboardModel />
-                  </Suspense>
-                </ModelErrorBoundary>
-              </Center>
-            </Bounds>
+              <Bounds fit clip observe margin={1.2}>
+                <Center top>
+                  <ModelErrorBoundary>
+                    <Suspense fallback={<Loader />}>
+                      <KeyboardModel />
+                    </Suspense>
+                  </ModelErrorBoundary>
+                </Center>
+              </Bounds>
 
-            <ContactShadows position={[0, -0.01, 0]} opacity={0.75} scale={12} blur={2.5} far={4} />
-            <Environment preset="city" />
-            <OrbitControls
-              makeDefault
-              enableDamping
-              dampingFactor={0.05}
-              autoRotate={autoRotate}
-              autoRotateSpeed={1.5}
-              minDistance={2}
-              maxDistance={10}
-              minPolarAngle={Math.PI / 6}
-              maxPolarAngle={Math.PI / 2 - 0.05}
-            />
+              <ContactShadows position={[0, -0.01, 0]} opacity={0.75} scale={12} blur={2.5} far={4} resolution={512} />
+              <Environment preset="city" />
+              <OrbitControls
+                makeDefault
+                enableDamping
+                dampingFactor={0.05}
+                autoRotate={autoRotate}
+                autoRotateSpeed={1.5}
+                minDistance={2}
+                maxDistance={10}
+                minPolarAngle={Math.PI / 6}
+                maxPolarAngle={Math.PI / 2 - 0.05}
+              />
+            </PerformanceMonitor>
           </Canvas>
 
           {/* Gesture hint */}

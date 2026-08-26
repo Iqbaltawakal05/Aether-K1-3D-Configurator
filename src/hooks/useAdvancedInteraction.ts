@@ -83,3 +83,4 @@ export function useAdvancedInteraction({ scene }: UseAdvancedInteractionOptions)
     })
   }, [scene, hoveredPart, selectedPart])
 }
+
