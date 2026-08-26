@@ -1,8 +1,8 @@
 # PROGRESS.md
 
-Current Phase: Phase 5 — Product Viewer
-Current Task: Load GLB & setup camera framing with OrbitControls
-Status: Phase 4 (Blender / Asset Pipeline) Completed
+Current Phase: Phase 6 — Configurator Architecture
+Current Task: Typed configuration state & state store setup
+Status: Phase 5 (Product Viewer) Completed
 
 ## Phases
 - [x] 0 Setup
@@ -10,7 +10,7 @@ Status: Phase 4 (Blender / Asset Pipeline) Completed
 - [x] 2 Three.js
 - [x] 3 React Three Fiber
 - [x] 4 Blender / Asset Pipeline
-- [ ] 5 Product Viewer
+- [x] 5 Product Viewer
 - [ ] 6 Configurator Architecture
 - [ ] 7 Core Configurator
 - [ ] 8 Advanced Interaction
@@ -30,4 +30,4 @@ Status: Phase 4 (Blender / Asset Pipeline) Completed
 None.
 
 ## Next
-Start Phase 5: Product Viewer.
+Start Phase 6: Configurator Architecture.

@@ -1,5 +1,5 @@
-import { R3FScene } from './components/R3FScene'
+import { ProductViewer } from './components/ProductViewer'
 
 export default function App() {
-  return <R3FScene />
+  return <ProductViewer />
 }
