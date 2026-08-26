@@ -1,4 +1,4 @@
-import { Suspense, Component, ReactNode, useRef, useState } from 'react'
+import { Suspense, Component, ReactNode, useRef, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useGLTF, OrbitControls, ContactShadows, Environment, Center, Bounds, Html, PerformanceMonitor } from '@react-three/drei'
 import * as THREE from 'three'
@@ -6,6 +6,7 @@ import { useApplyConfig } from '../hooks/useApplyConfig'
 import { useAdvancedInteraction } from '../hooks/useAdvancedInteraction'
 import { useConfigurator, KeyboardPart } from '../store/configuratorStore'
 import { ConfiguratorPanel } from './ConfiguratorPanel'
+import { isWebGLAvailable } from '../utils/webglCheck'
 
 // GLB Model Loader with live material updates & interaction bindings
 function KeyboardModel() {
@@ -131,16 +132,35 @@ class ModelErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 }
 
 export function ProductViewer() {
-  const { autoRotate } = useConfigurator()
+  const { autoRotate, setSelectedPart, resetToDefaults } = useConfigurator()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [dpr, setDpr] = useState<number>(1.5)
+  const [webGlSupported, setWebGlSupported] = useState<boolean>(true)
+
+  useEffect(() => {
+    setWebGlSupported(isWebGLAvailable())
+  }, [])
+
+  // Keyboard accessibility listeners (Escape = clear selection / close drawer, R = reset)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedPart(null)
+        setIsMobileOpen(false)
+      } else if (e.key.toLowerCase() === 'r' && e.altKey) {
+        resetToDefaults()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [setSelectedPart, resetToDefaults])
 
   return (
     <div className="configurator-wrapper">
       {/* Header */}
       <header style={{ padding: '0.75rem 1.5rem', background: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, flexShrink: 0 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.125rem', letterSpacing: '-0.01em' }}>Aether K1 — 3D Configurator</h2>
+          <h1 style={{ margin: 0, fontSize: '1.125rem', letterSpacing: '-0.01em', fontWeight: 700 }}>Aether K1 — 3D Configurator</h1>
           <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
             Interactive customization with live 3D preview &amp; exploded layer view
           </p>
@@ -161,48 +181,57 @@ export function ProductViewer() {
 
         {/* 3D Canvas Container */}
         <div style={{ flex: 1, position: 'relative', width: '100%', height: '100%' }}>
-          <Canvas
-            shadows
-            camera={{ position: [0, 3, 5], fov: 45 }}
-            style={{ background: 'var(--color-bg-main)' }}
-            dpr={dpr}
-            gl={{ antialias: true, powerPreference: 'high-performance' }}
-          >
-            {/* Adaptive Performance Monitoring for smooth FPS */}
-            <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.5)}>
-              <ambientLight intensity={0.7} />
-              <directionalLight position={[5, 8, 4]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0001} />
-              <directionalLight position={[-5, 3, -4]} intensity={0.5} color="#38bdf8" />
+          {!webGlSupported ? (
+            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#ef4444', padding: '2rem', textAlign: 'center' }}>
+              <div>
+                <h2>WebGL Tidak Didukung</h2>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>Peramban Anda tidak mendukung akselerasi grafik WebGL 3D.</p>
+              </div>
+            </div>
+          ) : (
+            <Canvas
+              shadows
+              camera={{ position: [0, 3, 5], fov: 45 }}
+              style={{ background: 'var(--color-bg-main)' }}
+              dpr={dpr}
+              gl={{ antialias: true, powerPreference: 'high-performance' }}
+            >
+              {/* Adaptive Performance Monitoring */}
+              <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.5)}>
+                <ambientLight intensity={0.7} />
+                <directionalLight position={[5, 8, 4]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0001} />
+                <directionalLight position={[-5, 3, -4]} intensity={0.5} color="#38bdf8" />
 
-              <Bounds fit clip observe margin={1.2}>
-                <Center top>
-                  <ModelErrorBoundary>
-                    <Suspense fallback={<Loader />}>
-                      <KeyboardModel />
-                    </Suspense>
-                  </ModelErrorBoundary>
-                </Center>
-              </Bounds>
+                <Bounds fit clip observe margin={1.2}>
+                  <Center top>
+                    <ModelErrorBoundary>
+                      <Suspense fallback={<Loader />}>
+                        <KeyboardModel />
+                      </Suspense>
+                    </ModelErrorBoundary>
+                  </Center>
+                </Bounds>
 
-              <ContactShadows position={[0, -0.01, 0]} opacity={0.75} scale={12} blur={2.5} far={4} resolution={512} />
-              <Environment preset="city" />
-              <OrbitControls
-                makeDefault
-                enableDamping
-                dampingFactor={0.05}
-                autoRotate={autoRotate}
-                autoRotateSpeed={1.5}
-                minDistance={2}
-                maxDistance={10}
-                minPolarAngle={Math.PI / 6}
-                maxPolarAngle={Math.PI / 2 - 0.05}
-              />
-            </PerformanceMonitor>
-          </Canvas>
+                <ContactShadows position={[0, -0.01, 0]} opacity={0.75} scale={12} blur={2.5} far={4} resolution={512} />
+                <Environment preset="city" />
+                <OrbitControls
+                  makeDefault
+                  enableDamping
+                  dampingFactor={0.05}
+                  autoRotate={autoRotate}
+                  autoRotateSpeed={1.5}
+                  minDistance={2}
+                  maxDistance={10}
+                  minPolarAngle={Math.PI / 6}
+                  maxPolarAngle={Math.PI / 2 - 0.05}
+                />
+              </PerformanceMonitor>
+            </Canvas>
+          )}
 
-          {/* Gesture hint */}
+          {/* Gesture & Keyboard Shortcut hint */}
           <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', padding: '0.5rem 1.25rem', borderRadius: '9999px', border: '1px solid var(--color-border)', fontSize: '0.75rem', color: 'var(--color-text-muted)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-            🖱️ Click parts to select · Drag/Scroll to inspect layers
+            🖱️ Click parts to select · Drag/Scroll to inspect · Press <kbd style={{ background: '#1e293b', padding: '1px 4px', borderRadius: '3px' }}>Esc</kbd> to clear
           </div>
         </div>
 
