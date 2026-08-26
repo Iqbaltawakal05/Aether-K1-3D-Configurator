@@ -1,14 +1,14 @@
 # PROGRESS.md
 
-Current Phase: Phase 3 — React Three Fiber
-Current Task: Canvas & R3F scene setup
-Status: Phase 2 (Three.js) Completed
+Current Phase: Phase 4 — Blender / Asset Pipeline
+Current Task: Prepare legally usable keyboard model & export GLB
+Status: Phase 3 (React Three Fiber) Completed
 
 ## Phases
 - [x] 0 Setup
 - [x] 1 3D Fundamentals
 - [x] 2 Three.js
-- [ ] 3 React Three Fiber
+- [x] 3 React Three Fiber
 - [ ] 4 Blender / Asset Pipeline
 - [ ] 5 Product Viewer
 - [ ] 6 Configurator Architecture
@@ -30,4 +30,4 @@ Status: Phase 2 (Three.js) Completed
 None.
 
 ## Next
-Start Phase 3: React Three Fiber implementation.
+Start Phase 4: Blender / Asset Pipeline.

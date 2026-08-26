@@ -1,5 +1,5 @@
-import { ThreePlayground } from './components/ThreePlayground'
+import { R3FScene } from './components/R3FScene'
 
 export default function App() {
-  return <ThreePlayground />
+  return <R3FScene />
 }
