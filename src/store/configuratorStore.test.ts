@@ -68,3 +68,4 @@ describe('configuratorStore', () => {
     expect(resetState.selectedPart).toBeNull()
   })
 })
+
