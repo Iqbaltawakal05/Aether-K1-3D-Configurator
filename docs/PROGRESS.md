@@ -1,8 +1,8 @@
 # PROGRESS.md
 
-Current Phase: Phase 7 — Core Configurator
-Current Task: Case variants & keycap variants
-Status: Phase 6 (Configurator Architecture) Completed
+Current Phase: Phase 8 — Advanced Interaction
+Current Task: Part selection & hover highlight
+Status: Phase 7 (Core Configurator) Completed
 
 ## Phases
 - [x] 0 Setup
@@ -12,7 +12,7 @@ Status: Phase 6 (Configurator Architecture) Completed
 - [x] 4 Blender / Asset Pipeline
 - [x] 5 Product Viewer
 - [x] 6 Configurator Architecture
-- [ ] 7 Core Configurator
+- [x] 7 Core Configurator
 - [ ] 8 Advanced Interaction
 - [ ] 9 UI/UX
 - [ ] 10 Performance
@@ -30,4 +30,4 @@ Status: Phase 6 (Configurator Architecture) Completed
 None.
 
 ## Next
-Start Phase 7: Core Configurator — wire up UI to 3D model.
+Start Phase 8: Advanced Interaction.

@@ -1,0 +1,125 @@
+import { Suspense, Component, ReactNode, useRef } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { useGLTF, OrbitControls, ContactShadows, Environment, Center, Bounds, Html } from '@react-three/drei'
+import * as THREE from 'three'
+import { useApplyConfig } from '../hooks/useApplyConfig'
+import { ConfiguratorPanel } from './ConfiguratorPanel'
+
+// GLB Model Loader — applies live material mutations via useApplyConfig
+function KeyboardModel() {
+  const { scene } = useGLTF('/assets/models/aether_k1.glb')
+  const sceneRef = useRef<THREE.Group>(scene as unknown as THREE.Group)
+
+  scene.traverse((child) => {
+    if ('isMesh' in child && child.isMesh) {
+      child.castShadow = true
+      child.receiveShadow = true
+    }
+  })
+
+  useApplyConfig({ scene: sceneRef.current })
+
+  return <primitive object={scene} />
+}
+
+useGLTF.preload('/assets/models/aether_k1.glb')
+
+function Loader() {
+  return (
+    <Html center>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#38bdf8', fontFamily: 'sans-serif' }}>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #1e293b',
+            borderTop: '3px solid #38bdf8',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '0.75rem',
+          }}
+        />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Loading Aether K1...</span>
+      </div>
+    </Html>
+  )
+}
+
+interface ErrorBoundaryProps { children: ReactNode }
+interface ErrorBoundaryState { hasError: boolean }
+class ModelErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() { return { hasError: true } }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Html center>
+          <div style={{ padding: '1.5rem', background: '#7f1d1d', color: '#fef2f2', borderRadius: '0.5rem', textAlign: 'center' }}>
+            <h3 style={{ margin: 0 }}>Gagal Memuat Model 3D</h3>
+            <p style={{ margin: '0.5rem 0 0', fontSize: '0.875rem' }}>File GLB tidak ditemukan.</p>
+          </div>
+        </Html>
+      )
+    }
+    return this.props.children
+  }
+}
+
+export function ProductViewer() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#030712', color: '#f9fafb' }}>
+      {/* Header */}
+      <header style={{ padding: '0.75rem 1.5rem', background: '#090d16', borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, flexShrink: 0 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.125rem', letterSpacing: '-0.01em' }}>Aether K1 — 3D Configurator</h2>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>
+            Interactive customization with live 3D preview
+          </p>
+        </div>
+      </header>
+
+      {/* Main Layout: Canvas + ConfiguratorPanel */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* 3D Canvas */}
+        <div style={{ flex: 1, position: 'relative' }}>
+          <Canvas
+            shadows
+            camera={{ position: [0, 3, 5], fov: 45 }}
+            style={{ background: '#030712' }}
+            dpr={[1, 2]}
+          >
+            <ambientLight intensity={0.7} />
+            <directionalLight position={[5, 8, 4]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0001} />
+            <directionalLight position={[-5, 3, -4]} intensity={0.5} color="#38bdf8" />
+
+            <Bounds fit clip observe margin={1.2}>
+              <Center top>
+                <ModelErrorBoundary>
+                  <Suspense fallback={<Loader />}>
+                    <KeyboardModel />
+                  </Suspense>
+                </ModelErrorBoundary>
+              </Center>
+            </Bounds>
+
+            <ContactShadows position={[0, -0.01, 0]} opacity={0.75} scale={12} blur={2.5} far={4} />
+            <Environment preset="city" />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.05} minDistance={2} maxDistance={10} minPolarAngle={Math.PI / 6} maxPolarAngle={Math.PI / 2 - 0.05} />
+          </Canvas>
+
+          {/* Gesture hint */}
+          <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(8px)', padding: '0.5rem 1.25rem', borderRadius: '9999px', border: '1px solid #1e293b', fontSize: '0.75rem', color: '#94a3b8', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+            🖱️ Drag · Scroll · Pinch to explore
+          </div>
+        </div>
+
+        {/* Configurator Sidebar */}
+        <ConfiguratorPanel />
+      </div>
+    </div>
+  )
+}

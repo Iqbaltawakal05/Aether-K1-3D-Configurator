@@ -85,3 +85,4 @@ export const useConfigurator = create<ConfiguratorState>((set) => ({
   toggleSwitches:   ()              => set((state) => ({ showSwitches: !state.showSwitches })),
   resetToDefaults:  ()              => set({ ...DEFAULTS }),
 }))
+

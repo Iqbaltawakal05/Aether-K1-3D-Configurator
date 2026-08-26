@@ -68,3 +68,4 @@ export function useApplyConfig({ scene }: UseApplyConfigOptions) {
     })
   }, [scene, caseVariant, keycapVariant, switchType, plateVariant, showSwitches])
 }
+
