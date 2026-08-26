@@ -1,5 +1,5 @@
 // src/components/ConfiguratorPanel.tsx
-// Sidebar panel — wires Zustand store to UI controls
+// Sidebar panel — wires Zustand store to UI controls & Phase 8 advanced interaction controls
 
 import {
   useConfigurator,
@@ -90,6 +90,10 @@ export function ConfiguratorPanel() {
     switchType, setSwitchType,
     plateVariant, setPlateVariant,
     showSwitches, toggleSwitches,
+    explodedFactor, setExplodedFactor,
+    autoRotate, setAutoRotate,
+    showLabels, setShowLabels,
+    selectedPart, setSelectedPart,
     resetToDefaults,
   } = useConfigurator()
 
@@ -205,14 +209,56 @@ export function ConfiguratorPanel() {
         </div>
       </div>
 
-      {/* Show Switches Toggle */}
+      {/* Phase 8: Exploded View Slider */}
       <div style={SECTION}>
-        <span style={LABEL}>Options</span>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', color: '#94a3b8' }}>
-          <input type="checkbox" checked={showSwitches} onChange={toggleSwitches} />
-          Show Switch Stems
-        </label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <span style={LABEL}>Exploded Layer View</span>
+          <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600 }}>
+            {Math.round(explodedFactor * 100)}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={explodedFactor}
+          onChange={(e) => setExplodedFactor(parseFloat(e.target.value))}
+          style={{ width: '100%', cursor: 'pointer', accentColor: '#38bdf8' }}
+        />
       </div>
+
+      {/* View Options */}
+      <div style={SECTION}>
+        <span style={LABEL}>View Controls</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', color: '#94a3b8' }}>
+            <input type="checkbox" checked={autoRotate} onChange={(e) => setAutoRotate(e.target.checked)} />
+            Auto-Rotate Camera
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', color: '#94a3b8' }}>
+            <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} />
+            Show 3D Part Annotations
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', color: '#94a3b8' }}>
+            <input type="checkbox" checked={showSwitches} onChange={toggleSwitches} />
+            Show Switch Stems
+          </label>
+        </div>
+      </div>
+
+      {/* Selection Status */}
+      {selectedPart && (
+        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#0c1a2e', border: '1px solid #0ea5e9', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
+          <div style={{ color: '#38bdf8', fontWeight: 600 }}>Selected Part: {selectedPart.toUpperCase()}</div>
+          <button
+            onClick={() => setSelectedPart(null)}
+            style={{ marginTop: '0.25rem', background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.7rem', cursor: 'pointer', padding: 0 }}
+          >
+            Clear Selection
+          </button>
+        </div>
+      )}
 
       {/* Build Summary */}
       <div style={{ marginTop: 'auto', padding: '1rem', background: '#111827', borderRadius: '0.5rem', fontSize: '0.75rem', color: '#64748b', lineHeight: 1.6 }}>

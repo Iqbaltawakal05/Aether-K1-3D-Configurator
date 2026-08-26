@@ -3,13 +3,24 @@ import { Canvas } from '@react-three/fiber'
 import { useGLTF, OrbitControls, ContactShadows, Environment, Center, Bounds, Html } from '@react-three/drei'
 import * as THREE from 'three'
 import { useApplyConfig } from '../hooks/useApplyConfig'
+import { useAdvancedInteraction } from '../hooks/useAdvancedInteraction'
+import { useConfigurator, KeyboardPart } from '../store/configuratorStore'
 import { ConfiguratorPanel } from './ConfiguratorPanel'
 
-// GLB Model Loader — applies live material mutations via useApplyConfig
+// GLB Model Loader with live material updates & interaction bindings
 function KeyboardModel() {
   const { scene } = useGLTF('/assets/models/aether_k1.glb')
   const sceneRef = useRef<THREE.Group>(scene as unknown as THREE.Group)
 
+  const { setHoveredPart, setSelectedPart, showLabels, explodedFactor } = useConfigurator()
+
+  // Apply material configuration state
+  useApplyConfig({ scene: sceneRef.current })
+
+  // Apply advanced interaction (exploded view Y-positions & hover/selection emissive highlights)
+  useAdvancedInteraction({ scene: sceneRef.current })
+
+  // Attach pointer event handlers for raycasting interaction
   scene.traverse((child) => {
     if ('isMesh' in child && child.isMesh) {
       child.castShadow = true
@@ -17,9 +28,60 @@ function KeyboardModel() {
     }
   })
 
-  useApplyConfig({ scene: sceneRef.current })
+  const getPartFromMeshName = (name: string): KeyboardPart | null => {
+    if (name === 'Case_Top' || name === 'Case_Bottom') return 'case'
+    if (name.startsWith('Keycap_')) return 'keycaps'
+    if (name.startsWith('Switch_Stem_')) return 'switches'
+    if (name === 'Plate') return 'plate'
+    if (name === 'PCB') return 'pcb'
+    return null
+  }
 
-  return <primitive object={scene} />
+  return (
+    <group
+      onPointerOver={(e) => {
+        e.stopPropagation()
+        const part = getPartFromMeshName(e.object.name)
+        setHoveredPart(part)
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation()
+        setHoveredPart(null)
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+        const part = getPartFromMeshName(e.object.name)
+        setSelectedPart(part)
+      }}
+    >
+      <primitive object={scene} />
+
+      {/* 3D Part Annotations / Labels */}
+      {showLabels && (
+        <>
+          <Html position={[0, 0.25 + explodedFactor * 0.4 + 0.3, 0.9]} center distanceFactor={8}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', border: '1px solid #38bdf8', color: '#f8fafc', fontSize: '10px', fontWeight: 600, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+              Top Case
+            </div>
+          </Html>
+          {explodedFactor > 0.2 && (
+            <>
+              <Html position={[0, 0.35 + explodedFactor * 0.3 + 0.1, 0]} center distanceFactor={8}>
+                <div style={{ background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', border: '1px solid #b5a642', color: '#f8fafc', fontSize: '10px', fontWeight: 600, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+                  Brass Plate
+                </div>
+              </Html>
+              <Html position={[0, 0.28 - explodedFactor * 0.2 - 0.1, 0]} center distanceFactor={8}>
+                <div style={{ background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', border: '1px solid #22c55e', color: '#f8fafc', fontSize: '10px', fontWeight: 600, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+                  Hotswap PCB
+                </div>
+              </Html>
+            </>
+          )}
+        </>
+      )}
+    </group>
+  )
 }
 
 useGLTF.preload('/assets/models/aether_k1.glb')
@@ -70,6 +132,8 @@ class ModelErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 }
 
 export function ProductViewer() {
+  const { autoRotate } = useConfigurator()
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#030712', color: '#f9fafb' }}>
       {/* Header */}
@@ -77,7 +141,7 @@ export function ProductViewer() {
         <div>
           <h2 style={{ margin: 0, fontSize: '1.125rem', letterSpacing: '-0.01em' }}>Aether K1 — 3D Configurator</h2>
           <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>
-            Interactive customization with live 3D preview
+            Interactive customization with live 3D preview &amp; exploded layer view
           </p>
         </div>
       </header>
@@ -108,12 +172,22 @@ export function ProductViewer() {
 
             <ContactShadows position={[0, -0.01, 0]} opacity={0.75} scale={12} blur={2.5} far={4} />
             <Environment preset="city" />
-            <OrbitControls makeDefault enableDamping dampingFactor={0.05} minDistance={2} maxDistance={10} minPolarAngle={Math.PI / 6} maxPolarAngle={Math.PI / 2 - 0.05} />
+            <OrbitControls
+              makeDefault
+              enableDamping
+              dampingFactor={0.05}
+              autoRotate={autoRotate}
+              autoRotateSpeed={1.5}
+              minDistance={2}
+              maxDistance={10}
+              minPolarAngle={Math.PI / 6}
+              maxPolarAngle={Math.PI / 2 - 0.05}
+            />
           </Canvas>
 
           {/* Gesture hint */}
           <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(8px)', padding: '0.5rem 1.25rem', borderRadius: '9999px', border: '1px solid #1e293b', fontSize: '0.75rem', color: '#94a3b8', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-            🖱️ Drag · Scroll · Pinch to explore
+            🖱️ Click parts to select · Drag/Scroll to inspect layers
           </div>
         </div>
 

@@ -10,6 +10,7 @@ export type KeycapVariant = 'arctic' | 'carbon' | 'sakura' | 'forest'
 export type SwitchType = 'linear' | 'tactile' | 'clicky'
 export type PlateVariant = 'brass' | 'aluminum' | 'carbon_fiber'
 export type KnobVariant = 'aluminum' | 'resin'
+export type KeyboardPart = 'case' | 'keycaps' | 'switches' | 'plate' | 'pcb'
 
 // Material presets mapped to Three.js-compatible colors
 export const CASE_PRESETS: Record<CaseVariant, { color: string; metalness: number; roughness: number; clearcoat: number; label: string }> = {
@@ -49,6 +50,13 @@ export interface ConfiguratorState {
   knobVariant:   KnobVariant
   showSwitches:  boolean
 
+  // Advanced Interaction State
+  selectedPart:   KeyboardPart | null
+  hoveredPart:    KeyboardPart | null
+  explodedFactor: number // 0.0 to 1.0
+  autoRotate:     boolean
+  showLabels:     boolean
+
   // Actions
   setCaseVariant:   (v: CaseVariant)   => void
   setKeycapVariant: (v: KeycapVariant) => void
@@ -56,20 +64,30 @@ export interface ConfiguratorState {
   setPlateVariant:  (v: PlateVariant)  => void
   setKnobVariant:   (v: KnobVariant)   => void
   toggleSwitches:   ()                 => void
+
+  setSelectedPart:   (part: KeyboardPart | null) => void
+  setHoveredPart:    (part: KeyboardPart | null) => void
+  setExplodedFactor: (factor: number) => void
+  setAutoRotate:     (rotate: boolean) => void
+  setShowLabels:     (show: boolean) => void
+
   resetToDefaults:  ()                 => void
 }
 
 // --- Default Configuration ---
 
-const DEFAULTS: Pick<ConfiguratorState,
-  'caseVariant' | 'keycapVariant' | 'switchType' | 'plateVariant' | 'knobVariant' | 'showSwitches'
-> = {
-  caseVariant:   'navy',
-  keycapVariant: 'arctic',
-  switchType:    'linear',
-  plateVariant:  'brass',
-  knobVariant:   'aluminum',
+const DEFAULTS = {
+  caseVariant:   'navy' as CaseVariant,
+  keycapVariant: 'arctic' as KeycapVariant,
+  switchType:    'linear' as SwitchType,
+  plateVariant:  'brass' as PlateVariant,
+  knobVariant:   'aluminum' as KnobVariant,
   showSwitches:  false,
+  selectedPart:   null as KeyboardPart | null,
+  hoveredPart:    null as KeyboardPart | null,
+  explodedFactor: 0.0,
+  autoRotate:     false,
+  showLabels:     true,
 }
 
 // --- Zustand Store ---
@@ -83,6 +101,12 @@ export const useConfigurator = create<ConfiguratorState>((set) => ({
   setPlateVariant:  (plateVariant)  => set({ plateVariant }),
   setKnobVariant:   (knobVariant)   => set({ knobVariant }),
   toggleSwitches:   ()              => set((state) => ({ showSwitches: !state.showSwitches })),
-  resetToDefaults:  ()              => set({ ...DEFAULTS }),
-}))
 
+  setSelectedPart:   (selectedPart)   => set({ selectedPart }),
+  setHoveredPart:    (hoveredPart)    => set({ hoveredPart }),
+  setExplodedFactor: (explodedFactor) => set({ explodedFactor }),
+  setAutoRotate:     (autoRotate)     => set({ autoRotate }),
+  setShowLabels:     (showLabels)     => set({ showLabels }),
+
+  resetToDefaults:  () => set({ ...DEFAULTS }),
+}))
