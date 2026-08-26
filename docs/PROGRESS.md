@@ -1,15 +1,15 @@
 # PROGRESS.md
 
-Current Phase: Phase 4 — Blender / Asset Pipeline
-Current Task: Prepare legally usable keyboard model & export GLB
-Status: Phase 3 (React Three Fiber) Completed
+Current Phase: Phase 5 — Product Viewer
+Current Task: Load GLB & setup camera framing with OrbitControls
+Status: Phase 4 (Blender / Asset Pipeline) Completed
 
 ## Phases
 - [x] 0 Setup
 - [x] 1 3D Fundamentals
 - [x] 2 Three.js
 - [x] 3 React Three Fiber
-- [ ] 4 Blender / Asset Pipeline
+- [x] 4 Blender / Asset Pipeline
 - [ ] 5 Product Viewer
 - [ ] 6 Configurator Architecture
 - [ ] 7 Core Configurator
@@ -30,4 +30,4 @@ Status: Phase 3 (React Three Fiber) Completed
 None.
 
 ## Next
-Start Phase 4: Blender / Asset Pipeline.
+Start Phase 5: Product Viewer.
